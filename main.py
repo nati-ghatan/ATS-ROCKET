@@ -49,13 +49,13 @@ class Net(nn.Module):
                                           kernel_size=current_kernel_size,
                                           stride=stride,
                                           groups=groups,
-                                          dilation=current_dilation,
+                                          dilation=dilation_factor,
                                           padding=current_padding_size))
 
     def forward(self, signal):
         conv_output = []
         for kernel in self.kernels:
-            reshaped_signal = signal.view(1, 1, signal.shape[-1]) # torch.tensor(signal.view(1, 1, signal.shape[-1]), dtype=kernel.weight.dtype)
+            reshaped_signal = signal.view(1, 1, signal.shape[-1])
             conv_output.append(kernel(reshaped_signal))
         return conv_output
 
@@ -64,7 +64,7 @@ class Net(nn.Module):
 def main_debug():
     # Parameters
     surrogate_signal_length = 1000
-    number_of_kernels = 3
+    number_of_kernels = 10
 
     # Create surrogate data
     surrogate_signal = torch.from_numpy(np.random.randn(surrogate_signal_length).astype(np.float32))
