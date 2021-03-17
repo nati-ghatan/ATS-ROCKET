@@ -42,15 +42,22 @@ class Net(nn.Module):
                 int(((current_kernel_size - 1) * dilation_factor) / 2)
 
             # Bias: bool
+            # TODO: To be implemented
 
-            # Create kernels with selected randomized parameters
-            self.kernels.append(nn.Conv1d(in_channels=1,
-                                          out_channels=1,
-                                          kernel_size=current_kernel_size,
-                                          stride=stride,
-                                          groups=groups,
-                                          dilation=dilation_factor,
-                                          padding=current_padding_size))
+            # Create kernel with selected randomized parameters
+            current_kernel = nn.Conv1d(in_channels=1,
+                                       out_channels=1,
+                                       kernel_size=current_kernel_size,
+                                       stride=stride,
+                                       groups=groups,
+                                       dilation=dilation_factor,
+                                       padding=current_padding_size)
+
+            # Initialize kernel weights using a normal distribution
+            torch.nn.init.normal(current_kernel.weight)
+
+            # Accumulate randomized kernel
+            self.kernels.append(current_kernel)
 
     def forward(self, signal):
         conv_output = []
