@@ -1,6 +1,6 @@
 import math
-
 import numpy as np
+import pandas as pd
 import torch
 
 from rocket_model import RocketNet
@@ -20,12 +20,18 @@ def __compute_expected_output_size(signal_length, kernel_size, padding, dilation
 # Debug functions
 def main_debug():
     # Parameters
-    signal_length = 1000
+    debug_data = False
     number_of_kernels = 10
     permitted_kernel_sizes = [7, 9, 11]  # Taken from the ROCKET article
 
-    # Create surrogate data
-    surrogate_signal = torch.from_numpy(np.random.randn(signal_length).astype(np.float32))
+    # Read UCR dataset or create surrogate data
+    if debug_data:
+        signal_length = 1000
+        surrogate_signal = torch.from_numpy(np.random.randn(signal_length).astype(np.float32))
+    else:
+        surrogate_signal = pd.read_csv('data/ElectricDevices_TRAIN.tsv', header=None, sep='\t')
+        surrogate_signal = torch.tensor(surrogate_signal.values.astype(np.float32))
+        signal_length = surrogate_signal.shape[1]
 
     # Define network
     net = RocketNet(data=surrogate_signal,

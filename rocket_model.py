@@ -61,7 +61,8 @@ class RocketNet(nn.Module):
 
     def forward(self, signal):
         conv_output = []
+        n_samples, signal_length = signal.shape
         for kernel, bias in zip(self.kernels, self.bias_terms):
-            reshaped_signal = signal.view(1, 1, signal.shape[-1])
+            reshaped_signal = signal.view(n_samples, 1, signal_length)
             conv_output.append(kernel(reshaped_signal) + bias)
         return conv_output
