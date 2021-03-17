@@ -26,11 +26,14 @@ class Net(nn.Module):
         # torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros')
         for kernel_index in range(n_kernels):
             # Size: int
+            current_kernel_size = np.random.randint(low=RANGE_SIZE[0], high=RANGE_SIZE[1])
             # Stride: int
             # Padding: int
             # Dilation: int
             # Bias: bool
-            self.kernels.append(nn.Conv1d(in_channels=1, out_channels=1, kernel_size=5))
+
+            # Create kernels with selected randomized parameters
+            self.kernels.append(nn.Conv1d(in_channels=1, out_channels=1, kernel_size=current_kernel_size))
 
     def forward(self, signal):
         conv_output = []
