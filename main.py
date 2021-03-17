@@ -54,7 +54,7 @@ class Net(nn.Module):
                                        padding=current_padding_size)
 
             # Initialize kernel weights using a normal distribution
-            torch.nn.init.normal(current_kernel.weight)
+            torch.nn.init.normal_(current_kernel.weight, mean=0.0, std=1.0)
 
             # Accumulate randomized kernel
             self.kernels.append(current_kernel)
