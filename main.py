@@ -34,6 +34,7 @@ def main_debug():
     results = net.forward(signal=surrogate_signal)
 
     # Validate output sizes
+    # Source: https://arxiv.org/pdf/1603.07285.pdf , Page 28
     for kernel_index in range(number_of_kernels):
         current_kernel = net.kernels[kernel_index]
         kernel_size = current_kernel.kernel_size[0]
