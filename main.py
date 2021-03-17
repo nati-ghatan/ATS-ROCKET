@@ -35,7 +35,7 @@ class Net(nn.Module):
     def forward(self, signal):
         conv_output = []
         for kernel in self.kernels:
-            reshaped_signal = signal.view(1, 1, signal.shape[-1])
+            reshaped_signal = torch.tensor(signal.view(1, 1, signal.shape[-1]), dtype=kernel.weight.dtype)
             conv_output.append(kernel(reshaped_signal))
         return conv_output
 
@@ -45,8 +45,8 @@ if __name__ == "__main__":
     number_of_kernels = 3
 
     # Create surrogate data
-    signal = torch.from_numpy(np.random.randn(10))
+    surrogate_signal = torch.from_numpy(np.random.randn(10))
     # Define network
     net = Net(n_kernels=number_of_kernels)
-    results = net.forward(signal=signal)
+    results = net.forward(signal=surrogate_signal)
     h = 1
