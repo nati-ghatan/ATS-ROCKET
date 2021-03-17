@@ -16,6 +16,7 @@ class RocketNet(nn.Module):
     def __generate_random_kernels(self, n_kernels: int, groups=1, stride=1):
         # Initialize variables
         self.kernels = []
+        self.bias_terms = []
         signal_length = self.data.shape[-1]
 
         # torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros')
@@ -34,7 +35,8 @@ class RocketNet(nn.Module):
                 int(((current_kernel_size - 1) * dilation_factor) / 2)
 
             # Bias: bool
-            # TODO: To be implemented
+            # TODO: Show Nati and Dana
+            current_bias = np.random.uniform(low=-1., high=1.)
 
             # Create kernel with selected randomized parameters
             current_kernel = nn.Conv1d(in_channels=1,
@@ -43,7 +45,8 @@ class RocketNet(nn.Module):
                                        stride=stride,
                                        groups=groups,
                                        dilation=dilation_factor,
-                                       padding=current_padding_size)
+                                       padding=current_padding_size,
+                                       bias=False)
 
             # Initialize kernel weights
             # TODO: Show this to Dana and Adi and ask their opinion
@@ -52,10 +55,11 @@ class RocketNet(nn.Module):
 
             # Accumulate randomized kernel
             self.kernels.append(current_kernel)
+            self.bias_terms.append(current_bias)
 
     def forward(self, signal):
         conv_output = []
-        for kernel in self.kernels:
+        for kernel, bias in zip(self.kernels, self.bias_terms):
             reshaped_signal = signal.view(1, 1, signal.shape[-1])
-            conv_output.append(kernel(reshaped_signal))
+            conv_output.append(kernel(reshaped_signal) + bias)
         return conv_output
