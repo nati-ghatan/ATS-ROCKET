@@ -8,7 +8,9 @@ import torch.nn as nn
 class RocketNet(nn.Module):
     def __init__(self, data, n_kernels, kernel_sizes):
         super(RocketNet, self).__init__()
-        self.data = data
+        # TODO: Show Nati and Dana
+        self.raw_data = data
+        self.data = torch.max(data, torch.zeros_like(data))  # See section 3.2 in paper
         self.n_kernels = n_kernels
         self.kernel_sizes = kernel_sizes
         self.__generate_random_kernels(self.n_kernels)
