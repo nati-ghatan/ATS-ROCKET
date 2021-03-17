@@ -60,7 +60,8 @@ class Net(nn.Module):
         return conv_output
 
 
-if __name__ == "__main__":
+# Debug functions
+def main_debug():
     # Parameters
     surrogate_signal_length = 1000
     number_of_kernels = 3
@@ -75,3 +76,7 @@ if __name__ == "__main__":
     # Validate results
     print(net.kernels)
     print([x.shape[-1] for x in results])
+
+
+if __name__ == "__main__":
+    main_debug()
