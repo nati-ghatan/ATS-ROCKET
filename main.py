@@ -53,8 +53,10 @@ class Net(nn.Module):
                                        dilation=dilation_factor,
                                        padding=current_padding_size)
 
-            # Initialize kernel weights using a normal distribution
-            torch.nn.init.normal_(current_kernel.weight, mean=0.0, std=1.0)
+            # Initialize kernel weights
+            # TODO: Show this to Dana and Adi and ask their opinion
+            torch.nn.init.normal_(current_kernel.weight, mean=0.0, std=1.0)  # Draw from a Normal distribution
+            current_kernel.weight.data = current_kernel.weight.data - current_kernel.weight.data.mean()  # Mean center
 
             # Accumulate randomized kernel
             self.kernels.append(current_kernel)
