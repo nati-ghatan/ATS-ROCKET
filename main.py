@@ -1,24 +1,21 @@
-import torch.nn as nn
+import math
+
 import numpy as np
 import torch
-import math
-import torch.nn.functional as F
+import torch.nn as nn
+
 
 # Sources
 # PyTorch classifier: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 # PyTorch kernel: https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
 # Example ROCKET git: https://github.com/angus924/rocket/blob/master/code/rocket_functions.py
 
-IN_CHANNELS = 10
-OUT_CHANNELS = 10
-KERNEL_SIZE_VALUES = [7, 9, 11]  # Taken from the ROCKET article
-
-
 class Net(nn.Module):
-    def __init__(self, n_kernels, data):
+    def __init__(self, data, n_kernels, kernel_sizes):
         super(Net, self).__init__()
-        self.n_kernels = n_kernels
         self.data = data
+        self.n_kernels = n_kernels
+        self.kernel_sizes = kernel_sizes
         self.__generate_random_kernels(self.n_kernels)
 
     def __generate_random_kernels(self, n_kernels: int, groups=1, stride=1):
@@ -30,7 +27,7 @@ class Net(nn.Module):
         for kernel_index in range(n_kernels):
             # Stride: int = 1
             # Size: int
-            current_kernel_size = np.random.choice(KERNEL_SIZE_VALUES)
+            current_kernel_size = np.random.choice(self.kernel_sizes)
 
             # Dilation: int
             maximum_allowed_dilation = math.log2((signal_length - 1) / (current_kernel_size - 1))
@@ -74,12 +71,15 @@ def main_debug():
     # Parameters
     surrogate_signal_length = 1000
     number_of_kernels = 10
+    permitted_kernel_sizes = [7, 9, 11]  # Taken from the ROCKET article
 
     # Create surrogate data
     surrogate_signal = torch.from_numpy(np.random.randn(surrogate_signal_length).astype(np.float32))
 
     # Define network
-    net = Net(n_kernels=number_of_kernels, data=surrogate_signal)
+    net = Net(data=surrogate_signal,
+              n_kernels=number_of_kernels,
+              kernel_sizes=permitted_kernel_sizes)
     results = net.forward(signal=surrogate_signal)
 
     # Validate results
