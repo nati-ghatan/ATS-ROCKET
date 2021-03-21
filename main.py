@@ -5,6 +5,7 @@ import pandas as pd
 import torch
 
 from rocket_model import RocketNet
+from sklearn.linear_model import Ridge
 
 
 # Sources
@@ -20,25 +21,29 @@ def __compute_expected_output_size(signal_length, kernel_size, padding, dilation
 
 # Debug functions
 def main_debug():
-    # Parameters
+    # Convolutional parameters
     debug_data = False
     number_of_kernels = 10
     permitted_kernel_sizes = [7, 9, 11]  # Taken from the ROCKET article
 
+    # Classification parameters
+    alpha = 1.0  # Regularization strength
+    tolerance = 1e-3  # Precision of the solution
+
     # Read UCR dataset or create surrogate data
     if debug_data:
         signal_length = 1000
-        surrogate_signal = torch.from_numpy(np.random.randn(signal_length).astype(np.float32))
+        data = torch.from_numpy(np.random.randn(signal_length).astype(np.float32))
     else:
-        surrogate_signal = pd.read_csv('data/ElectricDevices_TRAIN.tsv', header=None, sep='\t')
-        surrogate_signal = torch.tensor(surrogate_signal.values.astype(np.float32))
-        signal_length = surrogate_signal.shape[1]
+        data = pd.read_csv('data/ElectricDevices_TRAIN.tsv', header=None, sep='\t')
+        data = torch.tensor(data.values.astype(np.float32))
+        signal_length = data.shape[1]
 
     # Define network
-    net = RocketNet(data=surrogate_signal,
+    net = RocketNet(data=data,
                     n_kernels=number_of_kernels,
                     kernel_sizes=permitted_kernel_sizes)
-    results = net.forward(signal=surrogate_signal)
+    results = net.forward(signal=data)
 
     # Validate output sizes
     # Source: https://arxiv.org/pdf/1603.07285.pdf , Page 28
@@ -55,9 +60,30 @@ def main_debug():
                                                               dilation=dilation_size,
                                                               stride=stride_size)
         assert expected_output_size == observed_output_size
+    print("Result sizes validated successfully!")
 
-    print("Results tested successfully!")
+    # Perform learning using Tikhonov regularization (Ridge regression)
+    # Source: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
+
+    # clf = Ridge(alpha=alpha, tol=tolerance)
+
+
+def main_ridge_regression_example():
+    # Create sample data
+    n_samples, n_features = 10, 5
+    rng = np.random.RandomState(0)
+    y = rng.randn(n_samples)
+    X = rng.randn(n_samples, n_features)
+
+    # Create Ridge regression model
+    clf = Ridge(alpha=1.0)
+
+    # Run training
+    clf.fit(X, y)
+
+    h = 1
 
 
 if __name__ == "__main__":
     main_debug()
+    # main_ridge_regression_example()
