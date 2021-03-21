@@ -35,8 +35,15 @@ def main_debug():
         signal_length = 1000
         data = torch.from_numpy(np.random.randn(signal_length).astype(np.float32))
     else:
+        # Read data and convert it to a PyTorch tensor
         data = pd.read_csv('data/ElectricDevices_TRAIN.tsv', header=None, sep='\t')
         data = torch.tensor(data.values.astype(np.float32))
+
+        # Separate between class labels (first column) and actual data (rest of the columns)
+        class_labels = data[:, 0]
+        data = data[:, 1:]
+
+        # Acquire data signal length
         signal_length = data.shape[1]
 
     # Define network
@@ -64,8 +71,7 @@ def main_debug():
 
     # Perform learning using Tikhonov regularization (Ridge regression)
     # Source: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
-
-    # clf = Ridge(alpha=alpha, tol=tolerance)
+    clf = Ridge(alpha=alpha, tol=tolerance)
 
 
 def main_ridge_regression_example():
