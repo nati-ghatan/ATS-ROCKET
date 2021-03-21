@@ -21,7 +21,6 @@ class RocketNet(nn.Module):
         self.bias_terms = []
         signal_length = self.data.shape[-1]
 
-        # torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros')
         for kernel_index in range(n_kernels):
             # Stride: int = 1
             # Size: int
