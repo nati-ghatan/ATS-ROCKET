@@ -5,7 +5,6 @@ import pandas as pd
 import torch
 
 from rocket_model import RocketNet
-from sklearn.linear_model import Ridge
 
 
 # Sources
@@ -34,6 +33,7 @@ def main_debug():
     if debug_data:
         signal_length = 1000
         data = torch.from_numpy(np.random.randn(signal_length).astype(np.float32))
+        class_labels = None
     else:
         # Read data and convert it to a PyTorch tensor
         data = pd.read_csv('data/ElectricDevices_TRAIN.tsv', header=None, sep='\t')
@@ -48,13 +48,14 @@ def main_debug():
 
     # Define network
     net = RocketNet(data=data,
+                    class_labels=class_labels,
                     n_kernels=number_of_kernels,
                     kernel_sizes=permitted_kernel_sizes)
     results = net.forward(signal=data)
 
     # Validate output sizes
     # Source: https://arxiv.org/pdf/1603.07285.pdf , Page 28
-    for kernel_index in range(number_of_kernels):
+    for kernel_index in range(net.n_kernels):
         current_kernel = net.kernels[kernel_index]
         kernel_size = current_kernel.kernel_size[0]
         observed_output_size = results[kernel_index].shape[-1]
@@ -69,27 +70,18 @@ def main_debug():
         assert expected_output_size == observed_output_size
     print("Result sizes validated successfully!")
 
-    # Perform learning using Tikhonov regularization (Ridge regression)
-    # Source: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
-    clf = Ridge(alpha=alpha, tol=tolerance)
+    # Transform data through convolution kernels
+    features = net.train(alpha=alpha, tolerance=tolerance)
 
-
-def main_ridge_regression_example():
-    # Create sample data
-    n_samples, n_features = 10, 5
-    rng = np.random.RandomState(0)
-    y = rng.randn(n_samples)
-    X = rng.randn(n_samples, n_features)
-
-    # Create Ridge regression model
-    clf = Ridge(alpha=1.0)
-
-    # Run training
-    clf.fit(X, y)
-
-    h = 1
+    # Examine results
+    sample_index = 0
+    sample_input = features[sample_index, :]
+    sample_input = sample_input.reshape(1, sample_input.shape[0])
+    expected_output = class_labels[sample_index]
+    observed_output = net.regressor.predict(sample_input)
+    print(f"Expected: {expected_output}")
+    print(f"Observed: {observed_output}")
 
 
 if __name__ == "__main__":
     main_debug()
-    # main_ridge_regression_example()

@@ -4,22 +4,27 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from sklearn.linear_model import Ridge
+
 
 class RocketNet(nn.Module):
-    def __init__(self, data, n_kernels, kernel_sizes):
+    def __init__(self, data, class_labels, n_kernels, kernel_sizes):
         super(RocketNet, self).__init__()
         # TODO: Show Nati and Dana
         self.raw_data = data
         self.data = torch.max(data, torch.zeros_like(data))  # See section 3.2 in paper
+        self.class_labels = class_labels
+        self.n_samples = self.data.shape[0]
+        self.signal_length = self.data.shape[1]
         self.n_kernels = n_kernels
         self.kernel_sizes = kernel_sizes
         self.__generate_random_kernels(self.n_kernels)
+        self.regressor = None
 
     def __generate_random_kernels(self, n_kernels: int, groups=1, stride=1):
         # Initialize variables
         self.kernels = []
         self.bias_terms = []
-        signal_length = self.data.shape[-1]
 
         for kernel_index in range(n_kernels):
             # Stride: int = 1
@@ -27,7 +32,7 @@ class RocketNet(nn.Module):
             current_kernel_size = np.random.choice(self.kernel_sizes)
 
             # Dilation: int
-            maximum_allowed_dilation = math.log2((signal_length - 1) / (current_kernel_size - 1))
+            maximum_allowed_dilation = math.log2((self.signal_length - 1) / (current_kernel_size - 1))
             current_dilation = np.random.randint(low=0, high=maximum_allowed_dilation)
             dilation_factor = math.floor(math.pow(2, current_dilation))
 
@@ -57,6 +62,32 @@ class RocketNet(nn.Module):
             # Accumulate randomized kernel
             self.kernels.append(current_kernel)
             self.bias_terms.append(current_bias)
+
+    def compute_features_for_data(self):
+        sample_features = []
+        for sample_index in range(self.n_samples):
+            # Reshape signal to meet model requirements, and feed it through the network
+            current_signal = self.data[sample_index, :].view(1, self.signal_length)
+            signal_features = self.forward(signal=current_signal)
+
+            # Flatten convolution results from all kernels
+            current_features = torch.cat(signal_features, dim=2)
+            current_features = current_features.view(1, current_features.shape[-1])
+            sample_features.append(current_features)
+
+        return torch.cat(sample_features, dim=0).detach().numpy()
+
+    def train(self, alpha=1.0, tolerance=1e-3):
+        # Transform data through convolution kernels
+        features = self.compute_features_for_data()
+
+        # Perform learning using Tikhonov regularization (Ridge regression)
+        # Source: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
+        # TODO: LinAlgWarning: Ill-conditioned matrix result may not be accurate.
+        self.regressor = Ridge(alpha=alpha, tol=tolerance)
+        self.regressor.fit(X=features, y=self.class_labels)
+
+        return features
 
     def forward(self, signal):
         conv_output = []
