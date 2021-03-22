@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import RidgeClassifier
 
 
 class RocketNet(nn.Module):
@@ -19,7 +19,7 @@ class RocketNet(nn.Module):
         self.n_kernels = n_kernels
         self.kernel_sizes = kernel_sizes
         self.__generate_random_kernels(self.n_kernels)
-        self.regressor = None
+        self.classifier = None
 
     def __generate_random_kernels(self, n_kernels: int, groups=1, stride=1):
         # Initialize variables
@@ -84,9 +84,9 @@ class RocketNet(nn.Module):
         # Perform learning using Tikhonov regularization (Ridge regression)
         # Source: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
         # TODO: LinAlgWarning: Ill-conditioned matrix result may not be accurate.
-        self.regressor = Ridge(alpha=alpha, tol=tolerance)
-        self.regressor.fit(X=features, y=self.class_labels)
-
+        self.classifier = RidgeClassifier(alpha=alpha, tol=tolerance)
+        self.classifier.fit(X=features, y=self.class_labels)
+        print('score', self.classifier.score(X=features,y=self.class_labels))
         return features
 
     def forward(self, signal):

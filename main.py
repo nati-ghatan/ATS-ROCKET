@@ -22,7 +22,7 @@ def __compute_expected_output_size(signal_length, kernel_size, padding, dilation
 def main_debug():
     # Convolutional parameters
     debug_data = False
-    number_of_kernels = 10
+    number_of_kernels = 1000
     permitted_kernel_sizes = [7, 9, 11]  # Taken from the ROCKET article
 
     # Classification parameters
@@ -78,7 +78,7 @@ def main_debug():
     sample_input = features[sample_index, :]
     sample_input = sample_input.reshape(1, sample_input.shape[0])
     expected_output = class_labels[sample_index]
-    observed_output = net.regressor.predict(sample_input)
+    observed_output = net.classifier.predict(sample_input)
     print(f"Expected: {expected_output}")
     print(f"Observed: {observed_output}")
 
