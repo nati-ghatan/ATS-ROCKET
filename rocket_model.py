@@ -3,8 +3,8 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
-
 from sklearn.linear_model import RidgeClassifier
+from tqdm import tqdm
 
 
 class RocketNet(nn.Module):
@@ -65,17 +65,17 @@ class RocketNet(nn.Module):
 
     def compute_features_for_data(self):
         sample_features = []
-        for sample_index in range(self.n_samples):
+        print('Computing features for data')
+        for sample_index in tqdm(range(self.n_samples)):
             # Reshape signal to meet model requirements, and feed it through the network
             current_signal = self.data[sample_index, :].view(1, self.signal_length)
             signal_features = self.forward(signal=current_signal)
 
-            # Flatten convolution results from all kernels
-            current_features = torch.cat(signal_features, dim=2)
-            current_features = current_features.view(1, current_features.shape[-1])
-            sample_features.append(current_features)
+            max_value = [x.max().item() for x in signal_features]
+            ppv = [x[x>0].shape[-1] / x.shape[-1] for x in signal_features]
+            sample_features.append(max_value + ppv)
 
-        return torch.cat(sample_features, dim=0).detach().numpy()
+        return sample_features
 
     def train(self, alpha=1.0, tolerance=1e-3):
         # Transform data through convolution kernels
@@ -84,9 +84,12 @@ class RocketNet(nn.Module):
         # Perform learning using Tikhonov regularization (Ridge regression)
         # Source: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
         # TODO: LinAlgWarning: Ill-conditioned matrix result may not be accurate.
-        self.classifier = RidgeClassifier(alpha=alpha, tol=tolerance)
+        self.classifier = RidgeClassifier(alpha=alpha, tol=tolerance, normalize=False)
         self.classifier.fit(X=features, y=self.class_labels)
-        print('score', self.classifier.score(X=features,y=self.class_labels))
+        print('Score', self.classifier.score(X=features, y=self.class_labels))
+
+        # predicted_labels = self.classifier.predict(features)
+
         return features
 
     def forward(self, signal):

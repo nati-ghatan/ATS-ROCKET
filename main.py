@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 import torch
+from sklearn.utils import shuffle
 
 from rocket_model import RocketNet
 
@@ -22,7 +23,7 @@ def __compute_expected_output_size(signal_length, kernel_size, padding, dilation
 def main_debug():
     # Convolutional parameters
     debug_data = False
-    number_of_kernels = 1000
+    number_of_kernels = 20
     permitted_kernel_sizes = [7, 9, 11]  # Taken from the ROCKET article
 
     # Classification parameters
@@ -37,6 +38,7 @@ def main_debug():
     else:
         # Read data and convert it to a PyTorch tensor
         data = pd.read_csv('data/ElectricDevices_TRAIN.tsv', header=None, sep='\t')
+        data = shuffle(data)
         data = torch.tensor(data.values.astype(np.float32))
 
         # Separate between class labels (first column) and actual data (rest of the columns)
@@ -71,16 +73,9 @@ def main_debug():
     print("Result sizes validated successfully!")
 
     # Transform data through convolution kernels
+    print("Beginning to train...")
     features = net.train(alpha=alpha, tolerance=tolerance)
-
-    # Examine results
-    sample_index = 0
-    sample_input = features[sample_index, :]
-    sample_input = sample_input.reshape(1, sample_input.shape[0])
-    expected_output = class_labels[sample_index]
-    observed_output = net.classifier.predict(sample_input)
-    print(f"Expected: {expected_output}")
-    print(f"Observed: {observed_output}")
+    print("Finished training!")
 
 
 if __name__ == "__main__":
