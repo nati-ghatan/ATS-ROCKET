@@ -33,27 +33,27 @@ def main_debug():
     # Read UCR dataset or create surrogate data
     if debug_data:
         signal_length = 1000
-        data = torch.from_numpy(np.random.randn(signal_length).astype(np.float32))
-        class_labels = None
+        train_data = torch.from_numpy(np.random.randn(signal_length).astype(np.float32))
+        train_class_labels = None
     else:
         # Read data and convert it to a PyTorch tensor
-        data = pd.read_csv('data/ElectricDevices_TRAIN.tsv', header=None, sep='\t')
-        data = shuffle(data)
-        data = torch.tensor(data.values.astype(np.float32))
+        train_data = pd.read_csv('data/ElectricDevices_TRAIN.tsv', header=None, sep='\t')
+        train_data = shuffle(train_data)
+        train_data = torch.tensor(train_data.values.astype(np.float32))
 
         # Separate between class labels (first column) and actual data (rest of the columns)
-        class_labels = data[:, 0]
-        data = data[:, 1:]
+        train_class_labels = train_data[:, 0]
+        train_data = train_data[:, 1:]
 
         # Acquire data signal length
-        signal_length = data.shape[1]
+        signal_length = train_data.shape[1]
 
     # Define network
-    net = RocketNet(data=data,
-                    class_labels=class_labels,
+    net = RocketNet(data=train_data,
+                    class_labels=train_class_labels,
                     n_kernels=number_of_kernels,
                     kernel_sizes=permitted_kernel_sizes)
-    results = net.forward(signal=data)
+    results = net.forward(signal=train_data)
 
     # Validate output sizes
     # Source: https://arxiv.org/pdf/1603.07285.pdf , Page 28
@@ -76,6 +76,13 @@ def main_debug():
     print("Beginning to train...")
     features = net.train(alpha=alpha, tolerance=tolerance)
     print("Finished training!")
+
+    print("Predicting for test")
+    test_data = pd.read_csv('data/ElectricDevices_TEST.tsv', header=None, sep='\t')
+    test_data = torch.tensor(test_data.values.astype(np.float32))
+    test_class_labels = test_data[:, 0]
+    test_data = test_data[:, 1:]
+    net.predict(data=test_data, labels=test_class_labels)
 
 
 if __name__ == "__main__":

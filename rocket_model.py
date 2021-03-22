@@ -63,12 +63,13 @@ class RocketNet(nn.Module):
             self.kernels.append(current_kernel)
             self.bias_terms.append(current_bias)
 
-    def compute_features_for_data(self):
+    def compute_features_for_data(self, data):
         sample_features = []
         print('Computing features for data')
-        for sample_index in tqdm(range(self.n_samples)):
+        n_samples, signal_length = data.shape
+        for sample_index in tqdm(range(n_samples)):
             # Reshape signal to meet model requirements, and feed it through the network
-            current_signal = self.data[sample_index, :].view(1, self.signal_length)
+            current_signal = data[sample_index, :].view(1, signal_length)
             signal_features = self.forward(signal=current_signal)
 
             max_value = [x.max().item() for x in signal_features]
@@ -79,18 +80,20 @@ class RocketNet(nn.Module):
 
     def train(self, alpha=1.0, tolerance=1e-3):
         # Transform data through convolution kernels
-        features = self.compute_features_for_data()
+        features = self.compute_features_for_data(self.data)
 
-        # Perform learning using Tikhonov regularization (Ridge regression)
-        # Source: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
-        # TODO: LinAlgWarning: Ill-conditioned matrix result may not be accurate.
+        # Perform learning (Ridge regression)
         self.classifier = RidgeClassifier(alpha=alpha, tol=tolerance, normalize=False)
         self.classifier.fit(X=features, y=self.class_labels)
-        print('Score', self.classifier.score(X=features, y=self.class_labels))
-
-        # predicted_labels = self.classifier.predict(features)
+        print('Training score', self.classifier.score(X=features, y=self.class_labels))
 
         return features
+
+    def predict(self, data, labels=None):
+        features = self.compute_features_for_data(data)
+        # predicted_labels = self.classifier.predict(X=features)
+        print('Test score', self.classifier.score(X=features, y=labels))
+        # return float(sum(predicted_labels == labels)) / len(labels)
 
     def forward(self, signal):
         conv_output = []
