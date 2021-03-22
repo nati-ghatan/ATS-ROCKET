@@ -73,7 +73,7 @@ class RocketNet(nn.Module):
             signal_features = self.forward(signal=current_signal)
 
             max_value = [x.max().item() for x in signal_features]
-            ppv = [x[x>0].shape[-1] / x.shape[-1] for x in signal_features]
+            ppv = [x[x > 0].shape[-1] / x.shape[-1] for x in signal_features]
             sample_features.append(max_value + ppv)
 
         return sample_features
